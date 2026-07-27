@@ -1,0 +1,2 @@
+import {Router} from 'express';import db from '../db.js';const r=Router();
+r.get('/',(q,s)=>s.json(db.prepare(`SELECT company,COUNT(*) applications,SUM(CASE WHEN current_stage IN ('Interview_R1','Interview_R2','Offer') THEN 1 ELSE 0 END) interviews,SUM(CASE WHEN current_stage='Offer' THEN 1 ELSE 0 END) offers,MAX(updated_at) last_activity FROM applications GROUP BY company ORDER BY applications DESC,company`).all()));export default r;
