@@ -1,5 +1,5 @@
 import { api } from "../api";
-import { useApp } from "../context/Appcontext";
+import { useApp } from "../context/AppContext";
 
 export default function Calendar() {
   const { reminders, setModal, load } = useApp();

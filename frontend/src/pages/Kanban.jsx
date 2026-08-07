@@ -1,4 +1,4 @@
-import { useApp } from "../context/Appcontext";
+import { useApp } from "../context/AppContext";
 import { STAGES, LABELS } from "../constants";
 import AppCard from "../components/Appcard";
 

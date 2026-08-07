@@ -1,4 +1,4 @@
-import { useApp } from "../context/Appcontext";
+import { useApp } from "../context/AppContext";
 import { LABELS } from "../constants";
 import Card from "../components/Card";
 import { formatDate } from "../utils/date";

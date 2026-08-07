@@ -19,7 +19,7 @@ import Interviews from "./pages/Interviews";
 import Companies from "./pages/Companies";
 import Dashboard from "./pages/Dashboard";
 
-import { AppProvider } from "./context/Appcontext";
+import { AppProvider } from "./context/AppContext.jsx";
 
 import "./index.css";
 

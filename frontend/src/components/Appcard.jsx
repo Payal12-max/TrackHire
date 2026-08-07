@@ -1,5 +1,5 @@
 import { api } from "../api";
-import { useApp } from "../context/Appcontext";
+import { useApp } from "../context/AppContext";
 import { daysSince } from "../utils/date";
 
 function AppCard({ application, openApp }) {
