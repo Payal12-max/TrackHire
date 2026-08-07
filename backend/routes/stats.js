@@ -1,11 +1,129 @@
-import {Router} from 'express';import db from '../db.js';const r=Router();
-r.get('/',(q,s)=>{
- const apps=db.prepare('SELECT * FROM applications').all(); const total=apps.length; const applied=apps.filter(a=>a.current_stage!=='Wishlist').length;
- const byStage=Object.fromEntries(['Wishlist','Applied','Screening','Interview_R1','Interview_R2','Offer','Rejected'].map(st=>[st,apps.filter(a=>a.current_stage===st).length]));
- const history=db.prepare('SELECT * FROM stage_history').all(); const reached={}; for(const st of Object.keys(byStage)) reached[st]=new Set(history.filter(h=>h.to_stage===st).map(h=>h.application_id)).size;
- const bySource=db.prepare("SELECT COALESCE(source,'Unknown') name,COUNT(*) value FROM applications GROUP BY COALESCE(source,'Unknown') ORDER BY value DESC").all();
- const monthly=db.prepare("SELECT substr(COALESCE(applied_at,created_at),1,7) month,COUNT(*) count FROM applications GROUP BY month ORDER BY month").all();
- const reminders=db.prepare('SELECT COUNT(*) count FROM reminders WHERE completed=0').get().count;
- const overdue=db.prepare("SELECT COUNT(*) count FROM reminders WHERE completed=0 AND due_at<datetime('now')").get().count;
- s.json({total,applied,offers:byStage.Offer,rejections:byStage.Rejected,offerRate:applied?Math.round(byStage.Offer/applied*100):0,byStage,reached,bySource,monthly,openReminders:reminders,overdue});
-});export default r;
+import { Router } from "express";
+import prisma from "../src/lib/prisma.js";
+import { STAGES } from "./applications.js";
+
+const router = Router();
+
+export const LABELS = {
+  Wishlist: "Wishlist",
+  Applied: "Applied",
+  OA: "Online Assessment",
+  Screening: "Screening",
+  Interview_R1: "Interview Round 1",
+  Interview_R2: "Interview Round 2",
+  Offer: "Offer",
+  Rejected: "Rejected",
+};
+
+router.get("/", async (req, res) => {
+  try {
+    const apps = await prisma.application.findMany({
+      include: {
+        stageHistory: true,
+      },
+    });
+
+    const reminders = await prisma.reminder.findMany();
+
+    const total = apps.length;
+
+    const applied = apps.filter(
+      (a) => a.currentStage !== "Wishlist"
+    ).length;
+
+    // Applications currently in each stage
+    const byStage = {};
+
+    STAGES.forEach((stage) => {
+      byStage[stage] = apps.filter(
+        (a) => a.currentStage === stage
+      ).length;
+    });
+
+    // Number of unique applications that have ever reached each stage
+    const reached = {};
+
+    STAGES.forEach((stage) => {
+      reached[stage] = new Set(
+        apps
+          .flatMap((a) => a.stageHistory)
+          .filter((h) => h.toStage === stage)
+          .map((h) => h.applicationId)
+      ).size;
+    });
+
+    // Applications by source
+    const sourceMap = {};
+
+    apps.forEach((a) => {
+      const key = a.source || "Unknown";
+      sourceMap[key] = (sourceMap[key] || 0) + 1;
+    });
+
+    const bySource = Object.entries(sourceMap).map(
+      ([name, value]) => ({
+        name,
+        value,
+      })
+    );
+
+    // Applications by month
+    const monthMap = {};
+
+    apps.forEach((a) => {
+      const date = a.appliedAt || a.createdAt;
+
+      if (!date) return;
+
+      const month = new Date(date)
+        .toISOString()
+        .slice(0, 7);
+
+      monthMap[month] = (monthMap[month] || 0) + 1;
+    });
+
+    const monthly = Object.entries(monthMap)
+      .map(([month, count]) => ({
+        month,
+        count,
+      }))
+      .sort((a, b) => a.month.localeCompare(b.month));
+
+    // Reminder stats
+    const openReminders = reminders.filter(
+      (r) => !r.completed
+    ).length;
+
+    const overdue = reminders.filter(
+      (r) =>
+        !r.completed &&
+        r.dueAt &&
+        new Date(r.dueAt) < new Date()
+    ).length;
+
+    res.json({
+      total,
+      applied,
+      offers: byStage.Offer || 0,
+      rejections: byStage.Rejected || 0,
+      offerRate:
+        applied > 0
+          ? Math.round((byStage.Offer / applied) * 100)
+          : 0,
+      byStage,
+      reached,
+      bySource,
+      monthly,
+      openReminders,
+      overdue,
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      error: "Failed to load stats",
+    });
+  }
+});
+
+export default router;

@@ -1,40 +1,435 @@
-import { Router } from 'express';
-import db from '../db.js';
+import { Router } from "express";
+import prisma from "../src/lib/prisma.js";
+
 const router = Router();
-export const STAGES=['Wishlist','Applied','Screening','Interview_R1','Interview_R2','Offer','Rejected'];
-const TERMINAL=['Offer','Rejected'];
-router.get('/',(req,res)=>res.json(db.prepare('SELECT * FROM applications ORDER BY updated_at DESC').all()));
-router.get('/:id',(req,res)=>{
- const app=db.prepare('SELECT * FROM applications WHERE id=?').get(req.params.id);
- if(!app) return res.status(404).json({error:'Not found'});
- const history=db.prepare('SELECT * FROM stage_history WHERE application_id=? ORDER BY changed_at DESC').all(req.params.id);
- const reminders=db.prepare('SELECT * FROM reminders WHERE application_id=? ORDER BY due_at').all(req.params.id);
- const interviews=db.prepare('SELECT * FROM interviews WHERE application_id=? ORDER BY scheduled_at DESC').all(req.params.id).map(i=>({...i,questions:db.prepare('SELECT * FROM interview_questions WHERE interview_id=?').all(i.id)}));
- const analyses=db.prepare('SELECT * FROM ai_analyses WHERE application_id=? ORDER BY created_at DESC').all(req.params.id).map(a=>({...a,result:JSON.parse(a.result_json)}));
- res.json({...app,history,reminders,interviews,analyses});
+
+export const STAGES = [
+  "Wishlist",
+  "Applied",
+  "Screening",
+  "OA",
+  "Interview_R1",
+  "Interview_R2",
+  "Offer",
+  "Rejected",
+];
+
+const TERMINAL = ["Offer", "Rejected"];
+
+function parseDate(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return date;
+}
+
+// Keeps your existing frontend snake_case structure
+function formatApplication(app) {
+  if (!app) return app;
+
+  return {
+    id: app.id,
+    user_id: app.userId,
+    company: app.company,
+    role: app.role,
+    jd_link: app.jdLink,
+    jd_text: app.jdText,
+    location: app.location,
+    job_type: app.jobType,
+    work_mode: app.workMode,
+    source: app.source,
+    salary: app.salary,
+    notes: app.notes,
+    current_stage: app.currentStage,
+    applied_at: app.appliedAt,
+    deadline: app.deadline,
+    created_at: app.createdAt,
+    updated_at: app.updatedAt,
+  };
+}
+
+function formatHistory(item) {
+  return {
+    id: item.id,
+    application_id: item.applicationId,
+    from_stage: item.fromStage,
+    to_stage: item.toStage,
+    note: item.note,
+    changed_at: item.changedAt,
+  };
+}
+
+function formatReminder(item) {
+  return {
+    id: item.id,
+    application_id: item.applicationId,
+    title: item.title,
+    type: item.type,
+    due_at: item.dueAt,
+    completed: item.completed,
+    created_at: item.createdAt,
+    updated_at: item.updatedAt,
+  };
+}
+
+function formatInterview(item) {
+  return {
+    id: item.id,
+    application_id: item.applicationId,
+    round_name: item.roundName,
+    interview_type: item.interviewType,
+    scheduled_at: item.scheduledAt,
+    difficulty: item.difficulty,
+    performance: item.performance,
+    reflection: item.reflection,
+    created_at: item.createdAt,
+    updated_at: item.updatedAt,
+    questions: item.questions ?? [],
+  };
+}
+
+function formatAnalysis(item) {
+  return {
+    id: item.id,
+    application_id: item.applicationId,
+    result: item.result,
+    created_at: item.createdAt,
+  };
+}
+
+router.get("/", async (req, res) => {
+  try {
+    const applications = await prisma.application.findMany({
+      orderBy: {
+        updatedAt: "desc",
+      },
+    });
+
+    res.json(applications.map(formatApplication));
+  } catch (error) {
+    console.error("GET applications error:", error);
+
+    res.status(500).json({
+      error: "Failed to fetch applications",
+    });
+  }
 });
-router.post('/',(req,res)=>{
- const b=req.body; if(!b.company||!b.role)return res.status(400).json({error:'company and role are required'});
- const r=db.prepare(`INSERT INTO applications(company,role,jd_link,jd_text,location,job_type,work_mode,source,salary,notes,current_stage,applied_at,deadline)
- VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(b.company,b.role,b.jd_link||null,b.jd_text||null,b.location||null,b.job_type||null,b.work_mode||null,b.source||null,b.salary||null,b.notes||null,b.current_stage||'Wishlist',b.applied_at||null,b.deadline||null);
- db.prepare('INSERT INTO stage_history(application_id,from_stage,to_stage,note) VALUES(?,NULL,?,?)').run(r.lastInsertRowid,b.current_stage||'Wishlist','Application created');
- res.status(201).json(db.prepare('SELECT * FROM applications WHERE id=?').get(r.lastInsertRowid));
+
+router.get("/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
+        error: "Invalid application id",
+      });
+    }
+
+    const app = await prisma.application.findUnique({
+      where: { id },
+      include: {
+        stageHistory: {
+          orderBy: {
+            changedAt: "desc",
+          },
+        },
+        reminders: {
+          orderBy: {
+            dueAt: "asc",
+          },
+        },
+        interviews: {
+          orderBy: {
+            scheduledAt: "desc",
+          },
+          include: {
+            questions: true,
+          },
+        },
+        analyses: {
+          orderBy: {
+            createdAt: "desc",
+          },
+        },
+      },
+    });
+
+    if (!app) {
+      return res.status(404).json({
+        error: "Not found",
+      });
+    }
+
+    res.json({
+      ...formatApplication(app),
+      history: app.stageHistory.map(formatHistory),
+      reminders: app.reminders.map(formatReminder),
+      interviews: app.interviews.map(formatInterview),
+      analyses: app.analyses.map(formatAnalysis),
+    });
+  } catch (error) {
+    console.error("GET application error:", error);
+
+    res.status(500).json({
+      error: error.message,
+    });
+  }
 });
-router.patch('/:id/stage',(req,res)=>{
- const {to_stage,note}=req.body; if(!STAGES.includes(to_stage))return res.status(400).json({error:'Invalid stage'});
- const app=db.prepare('SELECT * FROM applications WHERE id=?').get(req.params.id); if(!app)return res.status(404).json({error:'Not found'});
- if(app.current_stage===to_stage)return res.json(app);
- if(TERMINAL.includes(app.current_stage))return res.status(400).json({error:`Cannot move out of terminal stage ${app.current_stage}`});
- db.prepare("UPDATE applications SET current_stage=?,updated_at=datetime('now'),applied_at=CASE WHEN ?='Applied' AND applied_at IS NULL THEN datetime('now') ELSE applied_at END WHERE id=?").run(to_stage,to_stage,req.params.id);
- db.prepare('INSERT INTO stage_history(application_id,from_stage,to_stage,note) VALUES(?,?,?,?)').run(req.params.id,app.current_stage,to_stage,note||null);
- res.json(db.prepare('SELECT * FROM applications WHERE id=?').get(req.params.id));
+
+router.post("/", async (req, res) => {
+  try {
+    const b = req.body;
+
+    if (!b.company?.trim() || !b.role?.trim()) {
+      return res.status(400).json({
+        error: "company and role are required",
+      });
+    }
+
+    const stage = b.current_stage || "Wishlist";
+
+    if (!STAGES.includes(stage)) {
+      return res.status(400).json({
+        error: "Invalid stage",
+      });
+    }
+
+    // Temporary until Clerk middleware is connected
+    const userId = b.user_id || "temporary-user";
+
+    const user = await prisma.user.upsert({
+      where: {
+        id: userId,
+      },
+      update: {},
+      create: {
+        id: userId,
+      },
+    });
+
+    const application = await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: b.company.trim(),
+        role: b.role.trim(),
+        jdLink: b.jd_link || null,
+        jdText: b.jd_text || null,
+        location: b.location || null,
+        jobType: b.job_type || null,
+        workMode: b.work_mode || null,
+        source: b.source || null,
+        salary: b.salary || null,
+        notes: b.notes || null,
+        currentStage: stage,
+        appliedAt: parseDate(b.applied_at),
+        deadline: parseDate(b.deadline),
+
+        stageHistory: {
+          create: {
+            fromStage: null,
+            toStage: stage,
+            note: "Application created",
+          },
+        },
+      },
+    });
+
+    res.status(201).json(formatApplication(application));
+  } catch (error) {
+    console.error("POST application error:", error);
+
+    res.status(500).json({
+      error: "Failed to create application",
+    });
+  }
 });
-router.patch('/:id',(req,res)=>{
- const app=db.prepare('SELECT * FROM applications WHERE id=?').get(req.params.id); if(!app)return res.status(404).json({error:'Not found'});
- const fields=['company','role','jd_link','jd_text','location','job_type','work_mode','source','salary','notes','applied_at','deadline'];
- const vals=fields.map(k=>req.body[k]??app[k]);
- db.prepare(`UPDATE applications SET company=?,role=?,jd_link=?,jd_text=?,location=?,job_type=?,work_mode=?,source=?,salary=?,notes=?,applied_at=?,deadline=?,updated_at=datetime('now') WHERE id=?`).run(...vals,req.params.id);
- res.json(db.prepare('SELECT * FROM applications WHERE id=?').get(req.params.id));
+
+router.patch("/:id/stage", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { to_stage, note } = req.body;
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
+        error: "Invalid application id",
+      });
+    }
+
+    if (!STAGES.includes(to_stage)) {
+      return res.status(400).json({
+        error: "Invalid stage",
+      });
+    }
+
+    const existing = await prisma.application.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({
+        error: "Not found",
+      });
+    }
+
+    if (existing.currentStage === to_stage) {
+      return res.json(formatApplication(existing));
+    }
+
+    if (TERMINAL.includes(existing.currentStage)) {
+      return res.status(400).json({
+        error: `Cannot move out of terminal stage ${existing.currentStage}`,
+      });
+    }
+
+    const currentStageIndex = STAGES.indexOf(existing.currentStage);
+    const targetStageIndex = STAGES.indexOf(to_stage);
+
+    // Prevent moving backwards
+    if (targetStageIndex < currentStageIndex) {
+      return res.status(400).json({
+        error: "Cannot move an application to a previous stage.",
+      });
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const application = await tx.application.update({
+        where: { id },
+        data: {
+          currentStage: to_stage,
+          appliedAt:
+            to_stage === "Applied" && !existing.appliedAt
+              ? new Date()
+              : existing.appliedAt,
+        },
+      });
+
+      await tx.stageHistory.create({
+        data: {
+          applicationId: id,
+          fromStage: existing.currentStage,
+          toStage: to_stage,
+          note: note || null,
+        },
+      });
+
+      return application;
+    });
+
+    res.json(formatApplication(updated));
+  } catch (error) {
+    console.error("PATCH stage error:", error);
+
+    res.status(500).json({
+      error: "Failed to update stage",
+    });
+  }
 });
-router.delete('/:id',(req,res)=>{const r=db.prepare('DELETE FROM applications WHERE id=?').run(req.params.id);if(!r.changes)return res.status(404).json({error:'Not found'});res.status(204).send();});
+
+router.patch("/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const b = req.body;
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
+        error: "Invalid application id",
+      });
+    }
+
+    const existing = await prisma.application.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({
+        error: "Not found",
+      });
+    }
+
+    const application = await prisma.application.update({
+      where: { id },
+      data: {
+        company: b.company !== undefined ? b.company.trim() : existing.company,
+
+        role: b.role !== undefined ? b.role.trim() : existing.role,
+
+        jdLink: b.jd_link !== undefined ? b.jd_link || null : existing.jdLink,
+
+        jdText: b.jd_text !== undefined ? b.jd_text || null : existing.jdText,
+
+        location:
+          b.location !== undefined ? b.location || null : existing.location,
+
+        jobType:
+          b.job_type !== undefined ? b.job_type || null : existing.jobType,
+
+        workMode:
+          b.work_mode !== undefined ? b.work_mode || null : existing.workMode,
+
+        source: b.source !== undefined ? b.source || null : existing.source,
+
+        salary: b.salary !== undefined ? b.salary || null : existing.salary,
+
+        notes: b.notes !== undefined ? b.notes || null : existing.notes,
+
+        appliedAt:
+          b.applied_at !== undefined
+            ? parseDate(b.applied_at)
+            : existing.appliedAt,
+
+        deadline:
+          b.deadline !== undefined ? parseDate(b.deadline) : existing.deadline,
+      },
+    });
+
+    res.json(formatApplication(application));
+  } catch (error) {
+    console.error("PATCH application error:", error);
+
+    res.status(500).json({
+      error: "Failed to update application",
+    });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+
+    if (!Number.isInteger(id)) {
+      return res.status(400).json({
+        error: "Invalid application id",
+      });
+    }
+
+    const existing = await prisma.application.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return res.status(404).json({
+        error: "Not found",
+      });
+    }
+
+    await prisma.application.delete({
+      where: { id },
+    });
+
+    res.status(204).send();
+  } catch (error) {
+    console.error("DELETE application error:", error);
+
+    res.status(500).json({
+      error: "Failed to delete application",
+    });
+  }
+});
+
 export default router;

@@ -1,0 +1,133 @@
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 220px;
+  background: #ffffff;
+  border-right: 1px solid #e6ebe8;
+  padding: 24px 14px;
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 26px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logo-icon {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #a8cdb9;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #34815b;
+  background: #f3faf6;
+}
+
+.logo-name {
+  color: #327a56;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.logo-subtitle {
+  margin-top: 2px;
+  color: #7a827e;
+  font-size: 9px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sidebar-link {
+  height: 38px;
+  padding: 0 11px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #4f5753;
+  text-decoration: none;
+  font-size: 13px;
+  transition: 0.2s ease;
+}
+
+.sidebar-link:hover {
+  background: #f4f8f5;
+  color: #327a56;
+}
+
+.sidebar-link.active {
+  background: #edf6f1;
+  color: #327a56;
+  font-weight: 600;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+}
+
+.sidebar-tip {
+  border: 1px solid #e1e7e3;
+  border-radius: 8px;
+  padding: 18px 14px;
+  text-align: center;
+  background: #fff;
+}
+
+.tip-icon {
+  width: 55px;
+  height: 55px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: #f0f8f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4a936a;
+}
+
+.sidebar-tip h4 {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.sidebar-tip p {
+  margin: 7px 0 13px;
+  color: #8a918d;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.sidebar-add {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  background: #2f855a;
+  color: white;
+  border-radius: 6px;
+  padding: 8px 7px;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    display: none;
+  }
+}

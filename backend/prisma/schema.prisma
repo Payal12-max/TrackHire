@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String        @id
+  email        String?
+  firstName    String?
+  lastName     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+}
+
+model Application {
+  id           Int            @id @default(autoincrement())
+  userId       String
+  company      String
+  role         String
+  jdLink       String?
+  jdText       String?
+  location     String?
+  jobType      String?
+  workMode     String?
+  source       String?
+  salary       String?
+  notes        String?
+  deadline     DateTime?
+  currentStage Stage          @default(Wishlist)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  appliedAt    DateTime?
+  analyses     AiAnalysis[]
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  interviews   Interview[]
+  reminders    Reminder[]
+  stageHistory StageHistory[]
+
+  @@index([userId])
+  @@index([userId, currentStage])
+}
+
+model Reminder {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  title         String
+  type          String
+  dueAt         DateTime
+  completed     Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  notes         String?
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+}
+
+model Interview {
+  id            Int                 @id @default(autoincrement())
+  applicationId Int
+  roundName     String
+  interviewType String?
+  scheduledAt   DateTime?
+  difficulty    Int?
+  performance   Int?
+  reflection    String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  result        String?
+  application   Application         @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  questions     InterviewQuestion[]
+
+  @@index([applicationId])
+  @@index([scheduledAt])
+}
+
+model InterviewQuestion {
+  id          Int       @id @default(autoincrement())
+  interviewId Int
+  question    String
+  answerNotes String?
+  difficulty  Int?
+  solved      Boolean   @default(false)
+  topic       String?
+  interview   Interview @relation(fields: [interviewId], references: [id], onDelete: Cascade)
+
+  @@index([interviewId])
+}
+
+model AiAnalysis {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  result        Json
+  createdAt     DateTime    @default(now())
+  analysisType  String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+model StageHistory {
+  id            Int         @id @default(autoincrement())
+  applicationId Int
+  fromStage     Stage?
+  toStage       Stage
+  note          String?
+  changedAt     DateTime    @default(now())
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId])
+}
+
+enum Stage {
+  Wishlist
+  Applied
+  Screening
+  OA
+  Interview_R1
+  Interview_R2
+  Offer
+  Rejected
+}

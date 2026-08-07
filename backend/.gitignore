@@ -3,3 +3,5 @@ tracker.db
 tracker.db-journal
 tracker.db-wal
 tracker.db-shm
+
+/generated/prisma

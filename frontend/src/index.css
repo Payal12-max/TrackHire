@@ -40,7 +40,7 @@ nav {
   display: grid;
   gap: 5px;
 }
-nav button {
+nav a {
   background: none;
   border: 0;
   color: #b9c1d0;
@@ -49,8 +49,8 @@ nav button {
   border-radius: 7px;
   cursor: pointer;
 }
-nav button.active,
-nav button:hover {
+nav a.active,
+nav a:hover {
   background: #25304a;
   color: white;
 }
