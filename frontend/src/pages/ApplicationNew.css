@@ -1,0 +1,167 @@
+.application-new-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.application-new-header {
+  margin-bottom: 24px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 18px;
+  color: #5d6862;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.back-link:hover {
+  color: #327a56;
+}
+
+.application-new-header h1 {
+  margin: 0;
+  color: #17201b;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.application-new-header p {
+  margin: 7px 0 0;
+  color: #7b8580;
+  font-size: 13px;
+}
+
+/* ================= FORM CONTAINER ================= */
+
+.application-form-container {
+  background: #ffffff;
+  border: 1px solid #e3e8e5;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(30, 55, 42, 0.04);
+}
+
+/* ================= FORM ================= */
+
+.application-form-container form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 20px;
+}
+
+.application-form-container label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #354039;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.application-form-container input,
+.application-form-container textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dfe5e1;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #26302b;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.application-form-container input {
+  height: 40px;
+  padding: 0 12px;
+}
+
+.application-form-container textarea {
+  min-height: 100px;
+  padding: 11px 12px;
+  resize: vertical;
+}
+
+.application-form-container input::placeholder,
+.application-form-container textarea::placeholder {
+  color: #a0a8a4;
+}
+
+.application-form-container input:focus,
+.application-form-container textarea:focus {
+  border-color: #4d936f;
+  box-shadow: 0 0 0 3px rgba(77, 147, 111, 0.1);
+}
+
+/* ================= BUTTON ================= */
+
+.application-form-container .primary {
+  align-self: flex-start;
+  border: none;
+  border-radius: 7px;
+  padding: 11px 20px;
+  background: #4d936f;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.application-form-container .primary:hover {
+  background: #3d7e5d;
+}
+
+.application-form-container .primary:active {
+  transform: translateY(1px);
+}
+
+/* ================= ERROR ================= */
+
+.application-error {
+  margin-bottom: 18px;
+  padding: 11px 14px;
+  border: 1px solid #f0cccc;
+  border-radius: 7px;
+  background: #fff5f5;
+  color: #b33a3a;
+  font-size: 13px;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 700px) {
+  .application-form-container {
+    padding: 20px;
+  }
+
+  .formgrid {
+    grid-template-columns: 1fr;
+  }
+
+  .application-new-header h1 {
+    font-size: 24px;
+  }
+
+  .application-form-container .primary {
+    width: 100%;
+  }
+}

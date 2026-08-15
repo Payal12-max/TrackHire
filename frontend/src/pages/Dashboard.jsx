@@ -147,7 +147,7 @@ export default function Dashboard() {
         </div>
 
         <Link
-          to="/dashboard/applications"
+          to="/dashboard/applications/new"
           className="dashboard-add-btn"
         >
           <Plus size={17} />
@@ -397,7 +397,7 @@ export default function Dashboard() {
             </p>
 
             <Link
-              to="/dashboard/applications"
+              to="/dashboard/applications/new"
               className="dashboard-add-btn"
             >
               <Plus size={16} />

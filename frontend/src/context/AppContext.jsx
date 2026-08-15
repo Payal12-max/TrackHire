@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 import { api } from "../api";
 
@@ -23,6 +18,13 @@ export const emptyApplication = {
   deadline: "",
 };
 
+export const emptyReminder = {
+  title: "",
+  description: "",
+  due_at: "",
+  application_id: "",
+};
+
 export function AppProvider({ children }) {
   const [apps, setApps] = useState([]);
   const [stats, setStats] = useState(null);
@@ -33,8 +35,15 @@ export function AppProvider({ children }) {
 
   const [selected, setSelected] = useState(null);
   const [modal, setModal] = useState(null);
+
   const [form, setForm] = useState(emptyApplication);
+  const [reminderForm, setReminderForm] = useState(emptyReminder);
+
   const [error, setError] = useState("");
+
+  /* =====================================================
+     LOAD ALL DATA
+  ===================================================== */
 
   const load = async () => {
     try {
@@ -47,14 +56,16 @@ export function AppProvider({ children }) {
         api.weekly(),
       ]);
 
-      setApps(a);
+      setApps(a || []);
       setStats(s);
-      setReminders(r);
-      setInterviews(i);
-      setCompanies(c);
+      setReminders(r || []);
+      setInterviews(i || []);
+      setCompanies(c || []);
       setWeekly(w);
+
       setError("");
     } catch (error) {
+      console.error("Load error:", error);
       setError(error.message);
     }
   };
@@ -63,10 +74,16 @@ export function AppProvider({ children }) {
     load();
   }, []);
 
+  /* =====================================================
+     APPLICATION
+  ===================================================== */
+
   const openApp = async (id) => {
     try {
       const application = await api.app(id);
+
       setSelected(application);
+      setError("");
     } catch (error) {
       setError(error.message);
     }
@@ -77,22 +94,69 @@ export function AppProvider({ children }) {
 
     try {
       await api.create(form);
-      setModal(null);
+
       setForm(emptyApplication);
+
       await load();
+
+      return true;
     } catch (error) {
+      console.error("Create application failed:", error);
       setError(error.message);
+
+      return false;
     }
   };
 
   const moveApplication = async (id, stage) => {
     try {
       await api.stage(id, stage);
+
       await load();
     } catch (error) {
+      console.error("Move application failed:", error);
       alert(error.message);
     }
   };
+
+  /* =====================================================
+     REMINDER
+  ===================================================== */
+
+  const createReminder = async (event) => {
+    event.preventDefault();
+
+    try {
+      console.log("Creating reminder:", reminderForm);
+
+      const createdReminder = await api.createReminder(reminderForm);
+
+      console.log("Created reminder:", createdReminder);
+
+      // Update immediately
+      if (createdReminder) {
+        setReminders((prev) => [...prev, createdReminder]);
+      }
+
+      // Get fresh data from backend
+      await load();
+
+      // Reset form
+      setReminderForm(emptyReminder);
+
+      return true;
+    } catch (error) {
+      console.error("Create reminder failed:", error);
+
+      setError(error.message);
+
+      return false;
+    }
+  };
+
+  /* =====================================================
+     CONTEXT VALUE
+  ===================================================== */
 
   const value = {
     apps,
@@ -101,19 +165,29 @@ export function AppProvider({ children }) {
     interviews,
     companies,
     weekly,
+
     selected,
     modal,
+
     form,
+    reminderForm,
+
     error,
 
     setSelected,
     setModal,
+
     setForm,
+    setReminderForm,
 
     load,
+
     openApp,
+
     createApplication,
     moveApplication,
+
+    createReminder,
   };
 
   return (
@@ -122,6 +196,10 @@ export function AppProvider({ children }) {
     </AppContext.Provider>
   );
 }
+
+/* =====================================================
+   HOOK
+===================================================== */
 
 export function useApp() {
   const context = useContext(AppContext);

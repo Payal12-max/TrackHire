@@ -1,8 +1,22 @@
+import { useEffect } from "react";
 import { api } from "../api";
 import { useApp } from "../context/AppContext";
+import { useNavigate } from "react-router-dom";
+import "./Calender.css";
+
 
 export default function Calendar() {
-  const { reminders, setModal, load } = useApp();
+  const {
+    reminders,
+    setReminders,
+    load,
+  } = useApp();
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    load();
+  }, []);
 
   const toggleReminder = async (reminder) => {
     try {
@@ -20,7 +34,12 @@ export default function Calendar() {
   return (
     <>
       <div className="toolbar">
-        <button className="primary" onClick={() => setModal("reminder")}>
+        <button
+          className="add-reminder-button"
+          onClick={() =>
+            navigate("/dashboard/reminders/new")
+          }
+        >
           + Add reminder
         </button>
       </div>
@@ -29,15 +48,23 @@ export default function Calendar() {
         {reminders.map((reminder) => (
           <div
             key={reminder.id}
-            className={"event " + (reminder.completed ? "done" : "")}
+            className={
+              "event " +
+              (reminder.completed ? "done" : "")
+            }
           >
             <div className="datebox">
-              <strong>{new Date(reminder.due_at).getDate()}</strong>
+              <strong>
+                {new Date(reminder.due_at).getDate()}
+              </strong>
 
               <span>
-                {new Date(reminder.due_at).toLocaleString("en-US", {
-                  month: "short",
-                })}
+                {new Date(reminder.due_at).toLocaleString(
+                  "en-US",
+                  {
+                    month: "short",
+                  }
+                )}
               </span>
             </div>
 
@@ -45,12 +72,18 @@ export default function Calendar() {
               <h3>{reminder.title}</h3>
 
               <p>
-                {reminder.company} • {reminder.role} • {reminder.type}
+                {reminder.company || "—"} •{" "}
+                {reminder.role || "—"} •{" "}
+                {reminder.type || "Custom"}
               </p>
             </div>
 
-            <button onClick={() => toggleReminder(reminder)}>
-              {reminder.completed ? "Undo" : "Complete"}
+            <button
+              onClick={() => toggleReminder(reminder)}
+            >
+              {reminder.completed
+                ? "Undo"
+                : "Complete"}
             </button>
           </div>
         ))}

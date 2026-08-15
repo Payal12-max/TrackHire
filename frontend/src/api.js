@@ -1,41 +1,137 @@
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const BASE =
+  import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+
 async function req(path, options = {}) {
-  const r = await fetch(BASE + path, {
-    headers: { "Content-Type": "application/json" },
+  const response = await fetch(BASE + path, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
     ...options,
   });
-  if (!r.ok) {
-    const e = await r.json().catch(() => ({}));
-    throw new Error(e.error || "Request failed");
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+
+    throw new Error(
+      errorData.error || errorData.message || "Request failed"
+    );
   }
-  return r.status === 204 ? null : r.json();
+
+  return response.status === 204 ? null : response.json();
 }
+
 export const api = {
+  // =========================
+  // APPLICATIONS
+  // =========================
+
   apps: () => req("/applications"),
+
   app: (id) => req(`/applications/${id}`),
-  create: (b) =>
-    req("/applications", { method: "POST", body: JSON.stringify(b) }),
-  update: (id, b) =>
-    req(`/applications/${id}`, { method: "PATCH", body: JSON.stringify(b) }),
+
+  create: (data) =>
+    req("/applications", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  update: (id, data) =>
+    req(`/applications/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   stage: (id, to_stage) =>
     req(`/applications/${id}/stage`, {
       method: "PATCH",
       body: JSON.stringify({ to_stage }),
     }),
-  remove: (id) => req(`/applications/${id}`, { method: "DELETE" }),
+
+  remove: (id) =>
+    req(`/applications/${id}`, {
+      method: "DELETE",
+    }),
+
+  // =========================
+  // STATS
+  // =========================
+
   stats: () => req("/stats"),
+
+  // =========================
+  // REMINDERS
+  // =========================
+
   reminders: () => req("/reminders"),
-  addReminder: (b) =>
-    req("/reminders", { method: "POST", body: JSON.stringify(b) }),
-  updateReminder: (id, b) =>
-    req(`/reminders/${id}`, { method: "PATCH", body: JSON.stringify(b) }),
+
+  createReminder: (data) =>
+    req("/reminders", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  addReminder: (data) =>
+    req("/reminders", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateReminder: (id, data) =>
+    req(`/reminders/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  removeReminder: (id) =>
+    req(`/reminders/${id}`, {
+      method: "DELETE",
+    }),
+
+  // =========================
+  // INTERVIEWS
+  // =========================
+
   interviews: () => req("/interviews"),
-  addInterview: (b) =>
-    req("/interviews", { method: "POST", body: JSON.stringify(b) }),
+
+  addInterview: (data) =>
+    req("/interviews", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateInterview: (id, data) =>
+    req(`/interviews/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  removeInterview: (id) =>
+    req(`/interviews/${id}`, {
+      method: "DELETE",
+    }),
+
+  // =========================
+  // COMPANIES
+  // =========================
+
   companies: () => req("/companies"),
-  jobSummary: (b) =>
-    req("/ai/job-summary", { method: "POST", body: JSON.stringify(b) }),
-  resumeMatch: (b) =>
-    req("/ai/resume-match", { method: "POST", body: JSON.stringify(b) }),
+
+  // =========================
+  // AI
+  // =========================
+
+  jobSummary: (data) =>
+    req("/ai/job-summary", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  resumeMatch: (data) =>
+    req("/ai/resume-match", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
   weekly: () => req("/ai/weekly"),
 };

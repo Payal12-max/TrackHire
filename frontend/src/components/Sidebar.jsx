@@ -48,9 +48,7 @@ export default function Sidebar() {
         <div>
           <div className="logo-name">TrackHire</div>
 
-          <div className="logo-subtitle">
-            Your journey to the right job.
-          </div>
+          <div className="logo-subtitle">Your journey to the right job.</div>
         </div>
       </Link>
 
@@ -85,14 +83,9 @@ export default function Sidebar() {
           <h4>Stay organized.</h4>
           <h4>Stay ahead.</h4>
 
-          <p>
-            Track your progress and land your dream job.
-          </p>
+          <p>Track your progress and land your dream job.</p>
 
-          <Link
-            to="/dashboard/applications"
-            className="sidebar-add"
-          >
+          <Link to="/dashboard/applications/new" className="sidebar-add">
             <Plus size={15} />
             Add Application
           </Link>
