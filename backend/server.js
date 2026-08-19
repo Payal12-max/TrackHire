@@ -13,14 +13,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(clerkMiddleware());
 
-app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "TrackHire backend is running 🚀",
-  });
-});
+app.use(clerkMiddleware());
 
 app.use("/api/applications", applicationRoutes);
 app.use("/api/reminders", reminderRoutes);

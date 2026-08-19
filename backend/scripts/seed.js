@@ -1,5 +1,45 @@
-import db from '../db.js';
-db.exec('DELETE FROM interview_questions;DELETE FROM interviews;DELETE FROM reminders;DELETE FROM stage_history;DELETE FROM ai_analyses;DELETE FROM applications;');
-const apps=[['Google','Software Engineering Intern','Applied','LinkedIn','Bengaluru'],['Adobe','Frontend Intern','Screening','Careers Page','Noida'],['Amazon','SDE Intern','Interview_R1','Referral','Bengaluru'],['Atlassian','Frontend Engineer Intern','Wishlist','LinkedIn','Remote'],['Microsoft','Software Engineer Intern','Rejected','Careers Page','Hyderabad'],['Razorpay','Product Engineer Intern','Offer','Referral','Bengaluru']];
-for(const [c,role,stage,source,location] of apps){const x=db.prepare("INSERT INTO applications(company,role,current_stage,source,location,applied_at,updated_at) VALUES(?,?,?,?,?,datetime('now','-'||abs(random()%30)||' days'),datetime('now'))").run(c,role,stage,source,location);db.prepare('INSERT INTO stage_history(application_id,to_stage,note) VALUES(?,?,?)').run(x.lastInsertRowid,stage,'Seeded record');}
-const a=db.prepare("SELECT id FROM applications WHERE company='Amazon'").get();db.prepare("INSERT INTO reminders(application_id,title,type,due_at) VALUES(?,?,?,datetime('now','+2 days'))").run(a.id,'Prepare for technical interview','Interview',);db.prepare("INSERT INTO interviews(application_id,round_name,interview_type,scheduled_at,difficulty,performance,reflection) VALUES(?,?,?,datetime('now','+2 days'),?,?,?)").run(a.id,'Technical Round 1','DSA',4,3,'Revise graphs and dynamic programming.');console.log('Seed complete');
+import db from "../db.js";
+db.exec(
+  "DELETE FROM interview_questions;DELETE FROM interviews;DELETE FROM reminders;DELETE FROM stage_history;DELETE FROM ai_analyses;DELETE FROM applications;",
+);
+const apps = [
+  ["Google", "Software Engineering Intern", "Applied", "LinkedIn", "Bengaluru"],
+  ["Adobe", "Frontend Intern", "Screening", "Careers Page", "Noida"],
+  ["Amazon", "SDE Intern", "Interview_R1", "Referral", "Bengaluru"],
+  ["Atlassian", "Frontend Engineer Intern", "Wishlist", "LinkedIn", "Remote"],
+  [
+    "Microsoft",
+    "Software Engineer Intern",
+    "Rejected",
+    "Careers Page",
+    "Hyderabad",
+  ],
+  ["Razorpay", "Product Engineer Intern", "Offer", "Referral", "Bengaluru"],
+];
+for (const [c, role, stage, source, location] of apps) {
+  const x = db
+    .prepare(
+      "INSERT INTO applications(company,role,current_stage,source,location,applied_at,updated_at) VALUES(?,?,?,?,?,datetime('now','-'||abs(random()%30)||' days'),datetime('now'))",
+    )
+    .run(c, role, stage, source, location);
+  db.prepare(
+    "INSERT INTO stage_history(application_id,to_stage,note) VALUES(?,?,?)",
+  ).run(x.lastInsertRowid, stage, "Seeded record");
+}
+const a = db
+  .prepare("SELECT id FROM applications WHERE company='Amazon'")
+  .get();
+db.prepare(
+  "INSERT INTO reminders(application_id,title,type,due_at) VALUES(?,?,?,datetime('now','+2 days'))",
+).run(a.id, "Prepare for technical interview", "Interview");
+db.prepare(
+  "INSERT INTO interviews(application_id,round_name,interview_type,scheduled_at,difficulty,performance,reflection) VALUES(?,?,?,datetime('now','+2 days'),?,?,?)",
+).run(
+  a.id,
+  "Technical Round 1",
+  "DSA",
+  4,
+  3,
+  "Revise graphs and dynamic programming.",
+);
+console.log("Seed complete");
