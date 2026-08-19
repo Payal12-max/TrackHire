@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getAuth } from "@clerk/express";
 import prisma from "../src/lib/prisma.js";
 
 const router = Router();
@@ -6,13 +7,9 @@ const router = Router();
 function parseDate(value) {
   if (!value) return null;
 
-  const date = new Date(value);
+  const d = new Date(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return date;
+  return Number.isNaN(d.getTime()) ? null : d;
 }
 
 function formatQuestion(question) {
@@ -44,13 +41,34 @@ function formatInterview(interview) {
     company: interview.application?.company,
     role: interview.application?.role,
 
-    questions: interview.questions?.map(formatQuestion) || [],
+    questions:
+      interview.questions?.map(formatQuestion) || [],
   };
 }
 
+/*
+=========================================================
+GET INTERVIEWS
+Only interviews belonging to logged-in user
+=========================================================
+*/
 router.get("/", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const interviews = await prisma.interview.findMany({
+      where: {
+        application: {
+          userId,
+        },
+      },
+
       include: {
         application: {
           select: {
@@ -60,6 +78,7 @@ router.get("/", async (req, res) => {
         },
         questions: true,
       },
+
       orderBy: {
         scheduledAt: {
           sort: "desc",
@@ -68,7 +87,9 @@ router.get("/", async (req, res) => {
       },
     });
 
-    res.json(interviews.map(formatInterview));
+    res.json(
+      interviews.map(formatInterview)
+    );
   } catch (error) {
     console.error("GET interviews error:", error);
 
@@ -78,25 +99,47 @@ router.get("/", async (req, res) => {
   }
 });
 
+/*
+=========================================================
+CREATE INTERVIEW
+Application must belong to logged-in user
+=========================================================
+*/
 router.post("/", async (req, res) => {
   try {
-    const b = req.body;
-    const applicationId = Number(b.application_id);
+    const { isAuthenticated, userId } = getAuth(req);
 
-    if (!Number.isInteger(applicationId) || !b.round_name?.trim()) {
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
+    const b = req.body;
+
+    const applicationId = Number(
+      b.application_id
+    );
+
+    if (
+      !Number.isInteger(applicationId) ||
+      !b.round_name?.trim()
+    ) {
       return res.status(400).json({
         error: "application_id and round_name required",
       });
     }
 
-    const application = await prisma.application.findUnique({
-      where: {
-        id: applicationId,
-      },
-      select: {
-        id: true,
-      },
-    });
+    const application =
+      await prisma.application.findFirst({
+        where: {
+          id: applicationId,
+          userId,
+        },
+        select: {
+          id: true,
+        },
+      });
 
     if (!application) {
       return res.status(404).json({
@@ -104,7 +147,9 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const scheduledAt = parseDate(b.scheduled_at);
+    const scheduledAt = parseDate(
+      b.scheduled_at
+    );
 
     if (b.scheduled_at && !scheduledAt) {
       return res.status(400).json({
@@ -114,55 +159,91 @@ router.post("/", async (req, res) => {
 
     const questions = Array.isArray(b.questions)
       ? b.questions
-          .filter((question) => question.question?.trim())
+          .filter(
+            (question) =>
+              question.question?.trim()
+          )
           .map((question) => ({
-            question: question.question.trim(),
-            topic: question.topic || null,
+            question:
+              question.question.trim(),
+
+            topic:
+              question.topic || null,
+
             difficulty:
-              question.difficulty !== undefined &&
+              question.difficulty !==
+                undefined &&
               question.difficulty !== null
-                ? Number(question.difficulty)
+                ? Number(
+                    question.difficulty
+                  )
                 : null,
-            solved: Boolean(question.solved),
-            answerNotes: question.answer_notes || null,
+
+            solved:
+              Boolean(question.solved),
+
+            answerNotes:
+              question.answer_notes ||
+              null,
           }))
       : [];
 
-    const interview = await prisma.interview.create({
-      data: {
-        applicationId,
-        roundName: b.round_name.trim(),
-        interviewType: b.interview_type || null,
-        scheduledAt,
-        difficulty:
-          b.difficulty !== undefined && b.difficulty !== null
-            ? Number(b.difficulty)
-            : null,
-        performance:
-          b.performance !== undefined && b.performance !== null
-            ? Number(b.performance)
-            : null,
-        result: b.result || null,
-        reflection: b.reflection || null,
+    const interview =
+      await prisma.interview.create({
+        data: {
+          applicationId,
 
-        questions: {
-          create: questions,
-        },
-      },
-      include: {
-        application: {
-          select: {
-            company: true,
-            role: true,
+          roundName:
+            b.round_name.trim(),
+
+          interviewType:
+            b.interview_type || null,
+
+          scheduledAt,
+
+          difficulty:
+            b.difficulty !== undefined &&
+            b.difficulty !== null
+              ? Number(b.difficulty)
+              : null,
+
+          performance:
+            b.performance !== undefined &&
+            b.performance !== null
+              ? Number(b.performance)
+              : null,
+
+          result:
+            b.result || null,
+
+          reflection:
+            b.reflection || null,
+
+          questions: {
+            create: questions,
           },
         },
-        questions: true,
-      },
-    });
 
-    res.status(201).json(formatInterview(interview));
+        include: {
+          application: {
+            select: {
+              company: true,
+              role: true,
+            },
+          },
+
+          questions: true,
+        },
+      });
+
+    res.status(201).json(
+      formatInterview(interview)
+    );
   } catch (error) {
-    console.error("POST interview error:", error);
+    console.error(
+      "POST interview error:",
+      error
+    );
 
     res.status(500).json({
       error: "Failed to create interview",
@@ -170,8 +251,21 @@ router.post("/", async (req, res) => {
   }
 });
 
+/*
+=========================================================
+DELETE INTERVIEW
+=========================================================
+*/
 router.delete("/:id", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id)) {
@@ -180,14 +274,18 @@ router.delete("/:id", async (req, res) => {
       });
     }
 
-    const existing = await prisma.interview.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-      },
-    });
+    const existing =
+      await prisma.interview.findFirst({
+        where: {
+          id,
+          application: {
+            userId,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
 
     if (!existing) {
       return res.status(404).json({
@@ -203,7 +301,10 @@ router.delete("/:id", async (req, res) => {
 
     res.status(204).send();
   } catch (error) {
-    console.error("DELETE interview error:", error);
+    console.error(
+      "DELETE interview error:",
+      error
+    );
 
     res.status(500).json({
       error: "Failed to delete interview",

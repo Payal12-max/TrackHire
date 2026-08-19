@@ -16,7 +16,7 @@
   --landing-cream: #f0f3ef;
   --landing-blue-light: #edf3f8;
 
-  --shadow-soft: 0 20px 60px rgba(15, 31, 45, 0.10);
+  --shadow-soft: 0 20px 60px rgba(15, 31, 45, 0.1);
   --shadow-card: 0 25px 70px rgba(8, 28, 45, 0.18);
 }
 
@@ -182,6 +182,7 @@ body {
   align-items: center;
   justify-content: center;
 
+  border: 0;
   border-radius: 12px;
 
   background: var(--landing-green);
@@ -231,7 +232,6 @@ body {
   position: relative;
 
   min-height: 720px;
-
   width: 100%;
 
   display: grid;
@@ -249,7 +249,7 @@ body {
       rgba(255, 255, 255, 0.94) 0%,
       rgba(255, 255, 255, 0.87) 37%,
       rgba(255, 255, 255, 0.48) 65%,
-      rgba(255, 255, 255, 0.20) 100%
+      rgba(255, 255, 255, 0.2) 100%
     ),
     url("./pic1.jpg");
 
@@ -264,12 +264,11 @@ body {
   position: absolute;
   inset: 0;
 
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.15),
-      rgba(244, 248, 246, 0.10)
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(244, 248, 246, 0.1)
+  );
 
   pointer-events: none;
 }
@@ -286,9 +285,7 @@ body {
 
 .hero-content {
   max-width: 570px;
-
   margin: 0;
-
   text-align: left;
 }
 
@@ -324,8 +321,7 @@ body {
   border-radius: 50%;
 
   background: #16a085;
-
-  box-shadow: 0 0 0 4px rgba(22, 160, 133, 0.10);
+  box-shadow: 0 0 0 4px rgba(22, 160, 133, 0.1);
 }
 
 .hero h1 {
@@ -334,7 +330,6 @@ body {
   color: #0e1a2d;
 
   font-size: clamp(50px, 5.2vw, 76px);
-
   line-height: 0.99;
 
   letter-spacing: -4px;
@@ -409,7 +404,7 @@ body {
 .hero-secondary {
   color: #33445a;
 
-  background: rgba(255, 255, 255, 0.90);
+  background: rgba(255, 255, 255, 0.9);
 
   border: 1px solid #d8e0dd;
 
@@ -458,9 +453,7 @@ body {
 
 .hero-product {
   width: 100%;
-
   margin: 0;
-
   transform: translateY(8px);
 }
 
@@ -478,17 +471,12 @@ body {
   background: rgba(255, 255, 255, 0.97);
 
   box-shadow:
-    0 35px 80px rgba(9, 27, 42, 0.20),
+    0 35px 80px rgba(9, 27, 42, 0.2),
     0 10px 30px rgba(9, 27, 42, 0.08);
 
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
-
-/*
-  Your JSX currently has pic1.jpg inside the product window.
-  We hide it because pic1 is now used as the HERO background.
-*/
 
 .hero-dashboard-image {
   display: none;
@@ -515,7 +503,6 @@ body {
 .window-dots {
   display: flex;
   align-items: center;
-
   gap: 6px;
 }
 
@@ -614,7 +601,7 @@ body {
 
   margin-bottom: 5px;
 
-  padding: 10px 10px;
+  padding: 10px;
 
   border-radius: 8px;
 
@@ -638,7 +625,6 @@ body {
 
 .preview-nav:hover {
   background: #f2f6f4;
-
   color: var(--landing-green);
 }
 
@@ -646,7 +632,6 @@ body {
 
 .preview-main {
   min-width: 0;
-
   padding: 27px;
 }
 
@@ -706,7 +691,6 @@ body {
   color: white;
 
   font-size: 9px;
-
   font-weight: 700;
 
   cursor: pointer;
@@ -1143,19 +1127,19 @@ body {
    WORKFLOW
 ========================================================= */
 
-
-/* =========================================================
-   WORKFLOW — PREMIUM FULL-WIDTH SECTION
-   ========================================================= */
-
 .workflow-section {
   position: relative;
+
   width: 100%;
+
   min-height: 720px;
 
   display: grid;
+
   grid-template-columns: minmax(0, 0.88fr) minmax(480px, 1.12fr);
+
   align-items: center;
+
   gap: 70px;
 
   padding: 100px max(28px, calc((100vw - 1180px) / 2));
@@ -1164,7 +1148,6 @@ body {
 
   color: #ffffff;
 
-  /* Image + premium dark green overlay */
   background:
     linear-gradient(
       90deg,
@@ -1180,10 +1163,11 @@ body {
   background-repeat: no-repeat;
 }
 
-/* Subtle dark layer over everything */
 .workflow-section::before {
   content: "";
+
   position: absolute;
+
   inset: 0;
 
   background:
@@ -1201,27 +1185,27 @@ body {
   pointer-events: none;
 }
 
-/* Subtle border at top/bottom */
 .workflow-section::after {
   content: "";
+
   position: absolute;
+
   left: 0;
   right: 0;
   bottom: 0;
 
   height: 1px;
+
   background: rgba(255, 255, 255, 0.14);
 
   pointer-events: none;
 }
 
-
-/* =========================================================
-   LEFT SIDE
-   ========================================================= */
+/* LEFT SIDE */
 
 .workflow-intro {
   position: relative;
+
   z-index: 2;
 
   max-width: 540px;
@@ -1229,14 +1213,19 @@ body {
 
 .workflow-intro .section-label {
   display: inline-flex;
+
   align-items: center;
+
   gap: 9px;
 
   margin-bottom: 20px;
 
   color: #5ee0b0;
+
   font-size: 11px;
+
   font-weight: 800;
+
   letter-spacing: 2px;
 }
 
@@ -1244,14 +1233,13 @@ body {
   content: "";
 
   width: 28px;
+
   height: 2px;
 
   border-radius: 20px;
+
   background: #5ee0b0;
 }
-
-
-/* Main heading */
 
 .workflow-intro h2 {
   margin: 0 0 25px;
@@ -1261,9 +1249,11 @@ body {
   color: #ffffff;
 
   font-size: clamp(48px, 5vw, 72px);
+
   line-height: 0.98;
 
   letter-spacing: -4px;
+
   font-weight: 750;
 }
 
@@ -1272,12 +1262,8 @@ body {
 
   color: #16b98b;
 
-  text-shadow:
-    0 0 25px rgba(22, 185, 139, 0.12);
+  text-shadow: 0 0 25px rgba(22, 185, 139, 0.12);
 }
-
-
-/* Description */
 
 .workflow-intro p {
   max-width: 450px;
@@ -1287,25 +1273,27 @@ body {
   color: rgba(255, 255, 255, 0.72);
 
   font-size: 15px;
+
   line-height: 1.8;
 }
-
-
-/* CTA link */
 
 .workflow-intro .text-link {
   position: relative;
 
   display: inline-flex;
+
   align-items: center;
+
   gap: 10px;
 
   margin-top: 32px;
+
   padding-bottom: 7px;
 
   color: #ffffff;
 
   font-size: 13px;
+
   font-weight: 700;
 
   transition:
@@ -1317,6 +1305,7 @@ body {
   content: "";
 
   position: absolute;
+
   left: 0;
   right: 0;
   bottom: 0;
@@ -1330,6 +1319,7 @@ body {
 
 .workflow-intro .text-link:hover {
   color: #5ee0b0;
+
   gap: 14px;
 }
 
@@ -1337,56 +1327,47 @@ body {
   background: #5ee0b0;
 }
 
-
-/* =========================================================
-   RIGHT SIDE — STEPS
-   ========================================================= */
+/* RIGHT SIDE */
 
 .workflow-steps {
   position: relative;
+
   z-index: 2;
 
   width: 100%;
 
   border-top: 1px solid rgba(255, 255, 255, 0.22);
 
-  /* Slight glass effect */
   background: rgba(4, 25, 17, 0.12);
+
   backdrop-filter: blur(2px);
 }
-
-
-/* Individual step */
 
 .workflow-step {
   position: relative;
 
   display: grid;
+
   grid-template-columns: 65px 1fr;
+
   gap: 25px;
 
   min-height: 115px;
 
   padding: 28px 12px;
 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.20);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 
   transition:
     background 0.25s ease,
     padding-left 0.25s ease;
 }
 
-
-/* Hover */
-
 .workflow-step:hover {
   padding-left: 22px;
 
   background: rgba(255, 255, 255, 0.055);
 }
-
-
-/* Number */
 
 .step-number {
   position: relative;
@@ -1396,13 +1377,11 @@ body {
   color: rgba(133, 218, 184, 0.72);
 
   font-size: 11px;
+
   font-weight: 800;
 
   letter-spacing: 1px;
 }
-
-
-/* Small line beside number */
 
 .step-number::after {
   content: "";
@@ -1413,13 +1392,11 @@ body {
   top: 24px;
 
   width: 18px;
+
   height: 1px;
 
   background: rgba(94, 224, 176, 0.55);
 }
-
-
-/* Step content */
 
 .workflow-step h3 {
   margin: 0 0 9px;
@@ -1427,6 +1404,7 @@ body {
   color: #ffffff;
 
   font-size: 18px;
+
   font-weight: 600;
 
   letter-spacing: -0.3px;
@@ -1440,171 +1418,8 @@ body {
   color: rgba(255, 255, 255, 0.62);
 
   font-size: 13px;
+
   line-height: 1.7;
-}
-
-
-/* =========================================================
-   RESPONSIVE — TABLET
-   ========================================================= */
-
-@media (max-width: 1000px) {
-
-  .workflow-section {
-    grid-template-columns: 1fr;
-
-    gap: 65px;
-
-    min-height: auto;
-
-    padding-top: 90px;
-    padding-bottom: 90px;
-
-    background-position: center;
-  }
-
-  .workflow-intro {
-    max-width: 650px;
-  }
-
-  .workflow-intro h2 {
-    max-width: 650px;
-  }
-
-  .workflow-intro p {
-    max-width: 560px;
-  }
-
-  .workflow-steps {
-    max-width: 750px;
-  }
-}
-
-
-/* =========================================================
-   RESPONSIVE — MOBILE
-   ========================================================= */
-
-@media (max-width: 700px) {
-
-  .workflow-section {
-    min-height: auto;
-
-    grid-template-columns: 1fr;
-
-    gap: 48px;
-
-    padding: 75px 22px;
-
-    background:
-      linear-gradient(
-        180deg,
-        rgba(5, 61, 29, 0.95) 0%,
-        rgba(5, 43, 26, 0.94) 50%,
-        rgba(4, 28, 19, 0.96) 100%
-      ),
-      url("https://myprintablehome.com/wp-content/uploads/2021/03/Job-Application-Tracker-Featured-Image-1024x644.jpg");
-
-    background-size: cover;
-    background-position: center;
-  }
-
-
-  .workflow-intro .section-label {
-    margin-bottom: 16px;
-
-    font-size: 9px;
-    letter-spacing: 1.6px;
-  }
-
-
-  .workflow-intro h2 {
-    margin-bottom: 20px;
-
-    font-size: clamp(42px, 12vw, 58px);
-
-    line-height: 1;
-
-    letter-spacing: -3px;
-  }
-
-
-  .workflow-intro p {
-    font-size: 14px;
-    line-height: 1.75;
-  }
-
-
-  .workflow-intro .text-link {
-    margin-top: 25px;
-  }
-
-
-  .workflow-steps {
-    width: 100%;
-  }
-
-
-  .workflow-step {
-    grid-template-columns: 42px 1fr;
-
-    gap: 15px;
-
-    min-height: auto;
-
-    padding: 25px 5px;
-  }
-
-
-  .workflow-step:hover {
-    padding-left: 10px;
-  }
-
-
-  .step-number {
-    font-size: 10px;
-  }
-
-
-  .workflow-step h3 {
-    font-size: 16px;
-  }
-
-
-  .workflow-step p {
-    font-size: 12px;
-    line-height: 1.65;
-  }
-}
-
-
-/* =========================================================
-   VERY SMALL PHONES
-   ========================================================= */
-
-@media (max-width: 420px) {
-
-  .workflow-section {
-    padding: 65px 18px;
-  }
-
-  .workflow-intro h2 {
-    font-size: 42px;
-    letter-spacing: -2.5px;
-  }
-
-  .workflow-step {
-    grid-template-columns: 35px 1fr;
-    gap: 12px;
-  }
-
-  .workflow-step h3 {
-    font-size: 15px;
-  }
-
-  .workflow-step p {
-    font-size: 11px;
-  }
 }
 
 /* =========================================================
@@ -1636,12 +1451,7 @@ body {
 
   border-radius: 18px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #edf4f0,
-      #f3f5ef
-    );
+  background: linear-gradient(135deg, #edf4f0, #f3f5ef);
 
   border: 1px solid #e1e8e4;
 
@@ -1659,7 +1469,7 @@ body {
 
   background: white;
 
-  box-shadow: 0 25px 50px rgba(30, 50, 45, 0.10);
+  box-shadow: 0 25px 50px rgba(30, 50, 45, 0.1);
 }
 
 .analytics-top {
@@ -1861,6 +1671,7 @@ body {
 
 .review-person {
   display: flex;
+
   align-items: center;
 
   gap: 10px;
@@ -1875,6 +1686,7 @@ body {
   height: 35px;
 
   display: grid;
+
   place-items: center;
 
   border-radius: 50%;
@@ -1924,12 +1736,7 @@ body {
 .cta-section {
   padding: 105px 28px;
 
-  background:
-    linear-gradient(
-      135deg,
-      #e7f3ef,
-      #eff5f2
-    );
+  background: linear-gradient(135deg, #e7f3ef, #eff5f2);
 }
 
 .cta-inner {
@@ -1947,6 +1754,7 @@ body {
   margin: 0 auto 24px;
 
   display: grid;
+
   place-items: center;
 
   border-radius: 13px;
@@ -1955,7 +1763,7 @@ body {
 
   color: white;
 
-  box-shadow: 0 12px 25px rgba(8, 127, 115, 0.20);
+  box-shadow: 0 12px 25px rgba(8, 127, 115, 0.2);
 }
 
 .cta-inner p {
@@ -1972,6 +1780,7 @@ body {
 
 .cta-button {
   display: inline-flex;
+
   align-items: center;
 
   gap: 9px;
@@ -1990,7 +1799,7 @@ body {
 
   font-weight: 700;
 
-  box-shadow: 0 12px 25px rgba(8, 127, 115, 0.20);
+  box-shadow: 0 12px 25px rgba(8, 127, 115, 0.2);
 
   transition:
     transform 0.2s ease,
@@ -2005,7 +1814,9 @@ body {
 
 .cta-note {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   gap: 6px;
@@ -2058,6 +1869,7 @@ body {
 
 .footer-brand .brand {
   display: inline-flex;
+
   align-items: center;
 
   gap: 9px;
@@ -2070,6 +1882,7 @@ body {
   height: 34px;
 
   display: grid;
+
   place-items: center;
 
   border-radius: 9px;
@@ -2095,6 +1908,7 @@ body {
 
 .footer-column {
   display: flex;
+
   flex-direction: column;
 
   gap: 13px;
@@ -2122,6 +1936,7 @@ body {
 
 .footer-bottom {
   display: flex;
+
   justify-content: space-between;
 
   padding-top: 22px;
@@ -2462,6 +2277,10 @@ body {
 
     gap: 9px;
   }
+
+  .landing-demo-button {
+    min-width: 100px;
+  }
 }
 
 /* =========================================================
@@ -2524,10 +2343,28 @@ body {
     padding: 25px;
   }
 
+  .workflow-section {
+    padding: 65px 18px;
+  }
+
+  .workflow-intro h2 {
+    font-size: 42px;
+
+    letter-spacing: -2.5px;
+  }
+
   .workflow-step {
-    grid-template-columns: 45px 1fr;
+    grid-template-columns: 35px 1fr;
 
     gap: 12px;
+  }
+
+  .workflow-step h3 {
+    font-size: 15px;
+  }
+
+  .workflow-step p {
+    font-size: 11px;
   }
 
   .analytics-mock {

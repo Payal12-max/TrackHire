@@ -1,10 +1,19 @@
 const BASE =
   import.meta.env.VITE_API_URL || "http://localhost:4000/api";
 
+let getApiToken = null;
+
+export const setApiTokenGetter = (getter) => {
+  getApiToken = getter;
+};
+
 async function req(path, options = {}) {
+  const token = getApiToken ? await getApiToken() : null;
+
   const response = await fetch(BASE + path, {
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     ...options,

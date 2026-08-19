@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getAuth } from "@clerk/express";
 import prisma from "../src/lib/prisma.js";
 
 const router = Router();
@@ -28,7 +29,6 @@ function parseDate(value) {
   return date;
 }
 
-// Keeps your existing frontend snake_case structure
 function formatApplication(app) {
   if (!app) return app;
 
@@ -102,9 +102,26 @@ function formatAnalysis(item) {
   };
 }
 
+/*
+=========================================================
+GET ALL APPLICATIONS
+Only return applications belonging to logged-in Clerk user
+=========================================================
+*/
 router.get("/", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const applications = await prisma.application.findMany({
+      where: {
+        userId,
+      },
       orderBy: {
         updatedAt: "desc",
       },
@@ -120,8 +137,22 @@ router.get("/", async (req, res) => {
   }
 });
 
+/*
+=========================================================
+GET SINGLE APPLICATION
+Must belong to logged-in user
+=========================================================
+*/
 router.get("/:id", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id)) {
@@ -130,8 +161,11 @@ router.get("/:id", async (req, res) => {
       });
     }
 
-    const app = await prisma.application.findUnique({
-      where: { id },
+    const app = await prisma.application.findFirst({
+      where: {
+        id,
+        userId,
+      },
       include: {
         stageHistory: {
           orderBy: {
@@ -161,7 +195,7 @@ router.get("/:id", async (req, res) => {
 
     if (!app) {
       return res.status(404).json({
-        error: "Not found",
+        error: "Application not found",
       });
     }
 
@@ -181,8 +215,21 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+/*
+=========================================================
+CREATE APPLICATION
+=========================================================
+*/
 router.post("/", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const b = req.body;
 
     if (!b.company?.trim() || !b.role?.trim()) {
@@ -199,9 +246,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Temporary until Clerk middleware is connected
-    const userId = b.user_id || "temporary-user";
-
     const user = await prisma.user.upsert({
       where: {
         id: userId,
@@ -215,8 +259,10 @@ router.post("/", async (req, res) => {
     const application = await prisma.application.create({
       data: {
         userId: user.id,
+
         company: b.company.trim(),
         role: b.role.trim(),
+
         jdLink: b.jd_link || null,
         jdText: b.jd_text || null,
         location: b.location || null,
@@ -225,7 +271,9 @@ router.post("/", async (req, res) => {
         source: b.source || null,
         salary: b.salary || null,
         notes: b.notes || null,
+
         currentStage: stage,
+
         appliedAt: parseDate(b.applied_at),
         deadline: parseDate(b.deadline),
 
@@ -249,8 +297,21 @@ router.post("/", async (req, res) => {
   }
 });
 
+/*
+=========================================================
+MOVE APPLICATION STAGE
+=========================================================
+*/
 router.patch("/:id/stage", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const id = Number(req.params.id);
     const { to_stage, note } = req.body;
 
@@ -266,13 +327,16 @@ router.patch("/:id/stage", async (req, res) => {
       });
     }
 
-    const existing = await prisma.application.findUnique({
-      where: { id },
+    const existing = await prisma.application.findFirst({
+      where: {
+        id,
+        userId,
+      },
     });
 
     if (!existing) {
       return res.status(404).json({
-        error: "Not found",
+        error: "Application not found",
       });
     }
 
@@ -289,7 +353,6 @@ router.patch("/:id/stage", async (req, res) => {
     const currentStageIndex = STAGES.indexOf(existing.currentStage);
     const targetStageIndex = STAGES.indexOf(to_stage);
 
-    // Prevent moving backwards
     if (targetStageIndex < currentStageIndex) {
       return res.status(400).json({
         error: "Cannot move an application to a previous stage.",
@@ -298,7 +361,9 @@ router.patch("/:id/stage", async (req, res) => {
 
     const updated = await prisma.$transaction(async (tx) => {
       const application = await tx.application.update({
-        where: { id },
+        where: {
+          id,
+        },
         data: {
           currentStage: to_stage,
           appliedAt:
@@ -330,8 +395,21 @@ router.patch("/:id/stage", async (req, res) => {
   }
 });
 
+/*
+=========================================================
+UPDATE APPLICATION
+=========================================================
+*/
 router.patch("/:id", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const id = Number(req.params.id);
     const b = req.body;
 
@@ -341,26 +419,35 @@ router.patch("/:id", async (req, res) => {
       });
     }
 
-    const existing = await prisma.application.findUnique({
-      where: { id },
+    const existing = await prisma.application.findFirst({
+      where: {
+        id,
+        userId,
+      },
     });
 
     if (!existing) {
       return res.status(404).json({
-        error: "Not found",
+        error: "Application not found",
       });
     }
 
     const application = await prisma.application.update({
-      where: { id },
+      where: {
+        id,
+      },
       data: {
-        company: b.company !== undefined ? b.company.trim() : existing.company,
+        company:
+          b.company !== undefined ? b.company.trim() : existing.company,
 
-        role: b.role !== undefined ? b.role.trim() : existing.role,
+        role:
+          b.role !== undefined ? b.role.trim() : existing.role,
 
-        jdLink: b.jd_link !== undefined ? b.jd_link || null : existing.jdLink,
+        jdLink:
+          b.jd_link !== undefined ? b.jd_link || null : existing.jdLink,
 
-        jdText: b.jd_text !== undefined ? b.jd_text || null : existing.jdText,
+        jdText:
+          b.jd_text !== undefined ? b.jd_text || null : existing.jdText,
 
         location:
           b.location !== undefined ? b.location || null : existing.location,
@@ -371,11 +458,14 @@ router.patch("/:id", async (req, res) => {
         workMode:
           b.work_mode !== undefined ? b.work_mode || null : existing.workMode,
 
-        source: b.source !== undefined ? b.source || null : existing.source,
+        source:
+          b.source !== undefined ? b.source || null : existing.source,
 
-        salary: b.salary !== undefined ? b.salary || null : existing.salary,
+        salary:
+          b.salary !== undefined ? b.salary || null : existing.salary,
 
-        notes: b.notes !== undefined ? b.notes || null : existing.notes,
+        notes:
+          b.notes !== undefined ? b.notes || null : existing.notes,
 
         appliedAt:
           b.applied_at !== undefined
@@ -383,7 +473,9 @@ router.patch("/:id", async (req, res) => {
             : existing.appliedAt,
 
         deadline:
-          b.deadline !== undefined ? parseDate(b.deadline) : existing.deadline,
+          b.deadline !== undefined
+            ? parseDate(b.deadline)
+            : existing.deadline,
       },
     });
 
@@ -397,8 +489,21 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+/*
+=========================================================
+DELETE APPLICATION
+=========================================================
+*/
 router.delete("/:id", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const id = Number(req.params.id);
 
     if (!Number.isInteger(id)) {
@@ -407,19 +512,26 @@ router.delete("/:id", async (req, res) => {
       });
     }
 
-    const existing = await prisma.application.findUnique({
-      where: { id },
-      select: { id: true },
+    const existing = await prisma.application.findFirst({
+      where: {
+        id,
+        userId,
+      },
+      select: {
+        id: true,
+      },
     });
 
     if (!existing) {
       return res.status(404).json({
-        error: "Not found",
+        error: "Application not found",
       });
     }
 
     await prisma.application.delete({
-      where: { id },
+      where: {
+        id,
+      },
     });
 
     res.status(204).send();

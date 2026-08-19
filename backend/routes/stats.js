@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { getAuth } from "@clerk/express";
 import prisma from "../src/lib/prisma.js";
 import { STAGES } from "./applications.js";
 
@@ -17,13 +18,36 @@ export const LABELS = {
 
 router.get("/", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
+    /*
+    Only this user's applications
+    */
     const apps = await prisma.application.findMany({
+      where: {
+        userId,
+      },
       include: {
         stageHistory: true,
       },
     });
 
-    const reminders = await prisma.reminder.findMany();
+    /*
+    Only reminders belonging to this user's applications
+    */
+    const reminders = await prisma.reminder.findMany({
+      where: {
+        application: {
+          userId,
+        },
+      },
+    });
 
     const total = apps.length;
 
@@ -31,7 +55,9 @@ router.get("/", async (req, res) => {
       (a) => a.currentStage !== "Wishlist"
     ).length;
 
-    // Applications currently in each stage
+    /*
+    Applications currently in each stage
+    */
     const byStage = {};
 
     STAGES.forEach((stage) => {
@@ -40,7 +66,9 @@ router.get("/", async (req, res) => {
       ).length;
     });
 
-    // Number of unique applications that have ever reached each stage
+    /*
+    Unique applications that have ever reached each stage
+    */
     const reached = {};
 
     STAGES.forEach((stage) => {
@@ -52,11 +80,14 @@ router.get("/", async (req, res) => {
       ).size;
     });
 
-    // Applications by source
+    /*
+    Applications by source
+    */
     const sourceMap = {};
 
     apps.forEach((a) => {
       const key = a.source || "Unknown";
+
       sourceMap[key] = (sourceMap[key] || 0) + 1;
     });
 
@@ -67,7 +98,9 @@ router.get("/", async (req, res) => {
       })
     );
 
-    // Applications by month
+    /*
+    Applications by month
+    */
     const monthMap = {};
 
     apps.forEach((a) => {
@@ -87,9 +120,13 @@ router.get("/", async (req, res) => {
         month,
         count,
       }))
-      .sort((a, b) => a.month.localeCompare(b.month));
+      .sort((a, b) =>
+        a.month.localeCompare(b.month)
+      );
 
-    // Reminder stats
+    /*
+    Reminder statistics
+    */
     const openReminders = reminders.filter(
       (r) => !r.completed
     ).length;
@@ -106,10 +143,14 @@ router.get("/", async (req, res) => {
       applied,
       offers: byStage.Offer || 0,
       rejections: byStage.Rejected || 0,
+
       offerRate:
         applied > 0
-          ? Math.round((byStage.Offer / applied) * 100)
+          ? Math.round(
+              ((byStage.Offer || 0) / applied) * 100
+            )
           : 0,
+
       byStage,
       reached,
       bySource,
@@ -118,7 +159,7 @@ router.get("/", async (req, res) => {
       overdue,
     });
   } catch (err) {
-    console.error(err);
+    console.error("GET stats error:", err);
 
     res.status(500).json({
       error: "Failed to load stats",

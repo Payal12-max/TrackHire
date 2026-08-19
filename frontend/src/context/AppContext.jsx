@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "@clerk/clerk-react";
 
-import { api } from "../api";
-
+import { api, setApiTokenGetter } from "../api";
 const AppContext = createContext(null);
 
 export const emptyApplication = {
@@ -26,6 +26,7 @@ export const emptyReminder = {
 };
 
 export function AppProvider({ children }) {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [apps, setApps] = useState([]);
   const [stats, setStats] = useState(null);
   const [reminders, setReminders] = useState([]);
@@ -71,8 +72,22 @@ export function AppProvider({ children }) {
   };
 
   useEffect(() => {
-    load();
-  }, []);
+  if (!isLoaded) return;
+
+  if (!isSignedIn) {
+    setApps([]);
+    setStats(null);
+    setReminders([]);
+    setInterviews([]);
+    setCompanies([]);
+    setWeekly(null);
+    return;
+  }
+
+  setApiTokenGetter(getToken);
+
+  load();
+}, [isLoaded, isSignedIn, getToken]);
 
   /* =====================================================
      APPLICATION

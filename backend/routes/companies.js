@@ -1,11 +1,23 @@
 import { Router } from "express";
+import { getAuth } from "@clerk/express";
 import prisma from "../src/lib/prisma.js";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
   try {
+    const { isAuthenticated, userId } = getAuth(req);
+
+    if (!isAuthenticated || !userId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+
     const applications = await prisma.application.findMany({
+      where: {
+        userId,
+      },
       select: {
         company: true,
         currentStage: true,
@@ -32,7 +44,7 @@ router.get("/", async (req, res) => {
 
       if (
         ["Interview_R1", "Interview_R2", "Offer"].includes(
-          application.currentStage,
+          application.currentStage
         )
       ) {
         companyMap[company].interviews += 1;
