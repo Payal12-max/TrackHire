@@ -336,7 +336,7 @@ TrackHire/
 ## 1. Clone the repository
 
 ```bash
-git clone YOUR_GITHUB_REPOSITORY_URL
+git clone https://github.com/Payal12-max/TrackHire.git
 cd TrackHire
 ```
 
