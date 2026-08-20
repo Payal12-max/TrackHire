@@ -46,8 +46,6 @@ Applications are scattered across job portals, spreadsheets, emails, notes and b
 
 # 🖼️ Product Preview
 
-> Add your screenshots below 👇
-
 ### 🏠 Dashboard
 
 <p align="center">
