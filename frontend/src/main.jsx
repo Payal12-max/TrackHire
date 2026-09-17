@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { ClerkProvider } from "@clerk/clerk-react";
+import { Analytics } from "@vercel/analytics/react";
 
 import App from "./App";
 import Landing from "./landing/index.jsx";
@@ -121,5 +122,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <RouterProvider router={router} />
       </AppProvider>
     </ClerkProvider>
+
+    <Analytics /> {/* 👈 ADD THIS */}
   </React.StrictMode>,
 );
